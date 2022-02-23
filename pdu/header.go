@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"log"
 )
 
 const (
@@ -44,6 +45,8 @@ func (h *Header) UnmarshalBinary(data []byte) error {
 		return fmt.Errorf("not enough bytes (%d) to unmarshal the header (%d)", len(data), HeaderSize)
 	}
 
+	log.Printf("headerBytes: %v", data)
+	log.Printf("Version: %v, Type: %v, Flags: %v", data[0], data[1], data[2])
 	h.Version, h.Type, h.Flags = data[0], Type(data[1]), Flags(data[2])
 
 	buffer := bytes.NewBuffer(data[4:])

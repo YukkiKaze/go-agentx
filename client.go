@@ -101,10 +101,17 @@ func (c *Client) runTransmitter() chan *pdu.HeaderPacket {
 func (c *Client) runReceiver() chan *pdu.HeaderPacket {
 	rx := make(chan *pdu.HeaderPacket)
 
+	defer func() {
+		if err := recover(); err != nil {
+			log.Printf("[E] Caught receiver panic: %v\n", err)
+		}
+	} ()
 	go func() {
 	mainLoop:
 		for {
 			reader := bufio.NewReader(c.conn)
+			log.Printf("source IP: %v", c.conn.RemoteAddr())
+			log.Printf("local IP: %v", c.conn.LocalAddr())
 			headerBytes := make([]byte, pdu.HeaderSize)
 			if _, err := reader.Read(headerBytes); err != nil {
 				if opErr, ok := err.(*net.OpError); ok && strings.HasSuffix(opErr.Error(), "use of closed network connection") {
@@ -152,7 +159,7 @@ func (c *Client) runReceiver() chan *pdu.HeaderPacket {
 			case pdu.TypeGetNext:
 				packet = &pdu.GetNext{}
 			default:
-				log.Printf("unhandled packet of type %s", header.Type)
+				log.Printf("[W] agent-x: unhandled packet of type %s", header.Type)
 			}
 
 			packetBytes := make([]byte, header.PayloadLength)
